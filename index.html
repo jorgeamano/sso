@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <title></title>
+  </head>
+  <body class="grey lighten-3">
+    <!-- NAVBAR -->
+    <nav class="z-depth-0 grey lighten-4">
+      <div class="nav-wrapper container">
+        <ul id="nav-mobile" class="right hide-on-med-and-down">
+            <li class="logged-out">
+              <a href="#" class="grey-text modal-trigger" data-target="modal-login">Logar</a>
+            </li>
+            <li class="logged-out">
+              <a href="#" class="grey-text modal-trigger" data-target="modal-signup">Cadastrar</a>
+            </li>
+            <li class="logged-in">
+              <a href="#" class="grey-text" id="logout">Deslogar</a>
+            </li>
+        </ul>
+      </div>
+    </nav>
+    <!-- SIGN UP MODAL -->
+    <div id="modal-signup" class="modal">
+      <div class="modal-content">
+        <h4>Cadastrar</h4><br />
+        <form id="signup-form">
+          <div class="input-field">
+            <input type="email" id="signup-email" required />
+            <label for="signup-email">Endereço de email</label>
+          </div>
+          <div class="input-field">
+            <input type="password" id="signup-password" required />
+            <label for="signup-password">Senha</label>
+          </div>
+          <button class="btn yellow darken-2 z-depth-0">Logar</button>
+        </form>
+      </div>
+    </div>
+    <!-- LOGIN MODAL -->
+    <div id="modal-login" class="modal">
+      <div class="modal-content">
+        <h4>Logar</h4> <button onclick="googleSignIn()">Google</button><br /> <button onclick = "facebookSignin()">Facebook</button>
+        <form id="login-form">
+          <div class="input-field">
+            <input type="email" id="login-email" required />
+            <label for="login-email">Endereço de email</label>
+          </div>
+          <div class="input-field">
+            <input type="password" id="login-password" required />
+            <label for="login-password">Sua senha</label>
+          </div>
+          <button class="btn yellow darken-2 z-depth-0">Logar</button>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>
+
+<!--<script>
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '{your-app-id}',
+      cookie     : true,
+      xfbml      : true,
+      version    : '{api-version}'
+    });
+
+    FB.AppEvents.logPageView();
+
+  (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "https://connect.facebook.net/en_US/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>-->
+
+  <script src="https://www.gstatic.com/firebasejs/5.6.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.6.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.6.0/firebase-firestore.js"></script>
+<script>
+  // Configuração Firebase
+  var firebaseConfig = {
+    apiKey: "AIzaSyBv86bYnUq2a0iLASRoQ4Ug3IQxM_AVt6A",
+    authDomain: "login-99640.firebaseapp.com",
+    databaseURL: "https://login-99640.firebaseio.com",
+    projectId: "login-99640",
+    storageBucket: "login-99640.appspot.com",
+    messagingSenderId: "732440142720",
+    appId: "1:732440142720:web:6ece2cd491cf26f0"
+  };
+  firebase.initializeApp(firebaseConfig);
+
+  // Facebook conexãon
+  window.fbAsyncInit = function() {
+      FB.init ({
+         appId      : 'APP_ID',
+         xfbml      : true,
+         version    : 'v2.6'
+      });
+   };
+
+   (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) {return;}
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/sdk.js";
+      fjs.parentNode.insertBefore(js, fjs);
+   } (document, 'script', 'facebook-jssdk'));
+
+  // referências auth and firestore
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  // atualiza opções firestore
+  db.settings({ timestampsInSnapshots: true });
+
+  // Leitura de componentes
+  document.addEventListener('DOMContentLoaded', function() {
+
+  var modals = document.querySelectorAll('.modal');
+  M.Modal.init(modals);
+
+  var items = document.querySelectorAll('.collapsible');
+  M.Collapsible.init(items);
+
+  });
+
+  // Cadastro e-mail
+  const signupForm = document.querySelector('#signup-form');
+  signupForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+
+    // Informação do usuário e-mail
+    const email = signupForm['signup-email'].value;
+    const password = signupForm['signup-password'].value;
+
+    // cadastrando usuário e-mail
+    auth.createUserWithEmailAndPassword(email, password).then(cred => {
+      return db.collection('usuarios').doc(cred.user.uid).set({
+        email: signupForm['signup-email'].value
+      });
+    }).then(() => {
+      const modal = document.querySelector('#modal-signup');
+      M.Modal.getInstance(modal).close();
+      signupForm.reset();
+    });
+    var errorMessage = error.message;
+  });
+
+  // logout
+  const logout = document.querySelector('#logout');
+  logout.addEventListener('click', (e) => {
+  e.preventDefault();
+  auth.signOut().then(() => {
+    console.log('user signed out');
+    })
+  });
+
+  // Logar e-mail
+  const loginForm = document.querySelector('#login-form');
+  loginForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  // Informação do usuário e-mail
+  const email = loginForm['login-email'].value;
+  const password = loginForm['login-password'].value;
+
+  // Logar usuário e-mail
+  auth.signInWithEmailAndPassword(email, password).then((cred) => {
+    console.log(cred.user);
+    // Fechar modal & resetar formulário
+    const modal = document.querySelector('#modal-login');
+    M.Modal.getInstance(modal).close();
+    loginForm.reset();
+  });
+  var errorMessage = error.message;
+  });
+
+  // Status
+  auth.onAuthStateChanged(user => {
+    console.log(user)
+  })
+
+  // login google
+
+  var provider = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(provider);
+  firebase.auth().signInWithPopup(provider).then(function(result) {
+  var token = result.credential.accessToken;
+  var user = result.user;
+
+  return db.collection('usuarios').doc(result.user.uid).set({
+    email: result.email
+  });
+
+  }).catch(function(error) {
+
+  var errorCode = error.code;
+  var errorMessage = error.message;
+  var email = error.email;
+  var credential = error.credential;
+  });
+
+  function googleSignIn() {
+   firebase.auth()
+
+   .signInWithPopup(provider).then(function(result) {
+      var token = result.credential.accessToken;
+      var user = result.user;
+
+      return db.collection('usuarios').doc(result.user.uid).set({
+        email: result.email
+      });
+
+      console.log(token)
+      console.log(user)
+   }).catch(function(error) {
+      var errorCode = error.code;
+      var errorMessage = error.message;
+
+      console.log(error.code)
+      console.log(error.message)
+   });
+}
+
+  //login facebook
+  var provider = new firebase.auth.FacebookAuthProvider();
+
+  function facebookSignin() {
+    firebase.auth().signInWithPopup(provider)
+
+    .then(function(result) {
+        var token = result.credential.accessToken;
+        var user = result.user;
+
+        return db.collection('usuarios').doc(result.user.uid).set({
+          email: result.email
+        });
+
+      console.log(token)
+      console.log(user)
+    }).catch(function(error) {
+      console.log(error.code);
+      console.log(error.message);
+    });
+  }
+
+  function facebookSignout() {
+    firebase.auth().signOut()
+
+    .then(function() {
+        console.log('Signout successful!')
+    }, function(error) {
+        console.log('Signout failed')
+    });
+  }
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+<!--<fb:login-button
+  scope="public_profile,email"
+  onlogin="checkLoginState();">
+</fb:login-button>
+
+
+function checkLoginState() {
+  FB.getLoginStatus(function(response) {
+    statusChangeCallback(response);
+  });
+}-->
